@@ -64,6 +64,8 @@ export class EthersAdapter extends AdapterBlueprint {
   }
 
   private async createEthersConfig() {
+    this.ethersProviders = {}
+
     const { metadata, enableCoinbase, enableBaseAccount, enableInjected, enableEIP6963 } =
       OptionsController.state
 
@@ -82,7 +84,7 @@ export class EthersAdapter extends AdapterBlueprint {
       this.ethersProviders.baseAccount = new BaseProvider()
     }
 
-    if (enableCoinbase !== false) {
+    if (enableCoinbase !== false && enableBaseAccount !== false) {
       // Do not initialize provider to prevent unnecessary api calls - lazy load
       this.ethersProviders.coinbaseWallet = new CoinbaseWalletProvider()
     }

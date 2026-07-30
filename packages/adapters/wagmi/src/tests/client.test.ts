@@ -1659,12 +1659,15 @@ describe('WagmiAdapter - addThirdPartyConnectors', () => {
   })
 
   it('should add Coinbase connector if enableCoinbase is not false', async () => {
-    vi.spyOn(helpers, 'getBaseAccountConnector').mockResolvedValue(null)
+    const getBaseAccountConnectorSpy = vi
+      .spyOn(helpers, 'getBaseAccountConnector')
+      .mockResolvedValue(null)
     const getCoinbaseConnectorSpy = vi
       .spyOn(helpers, 'getCoinbaseConnector')
       .mockResolvedValue(mockCoinbaseConnector() as any)
     await adapter['addThirdPartyConnectors']()
     expect(getBaseAccountConnectorSpy).toHaveBeenCalled()
+    expect(getCoinbaseConnectorSpy).toHaveBeenCalled()
     expect(adapter.wagmiConfig.connectors.length).toBeGreaterThanOrEqual(1)
   })
 

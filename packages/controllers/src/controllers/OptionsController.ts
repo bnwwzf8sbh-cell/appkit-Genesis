@@ -227,6 +227,8 @@ const state = proxy<OptionsControllerState>({
   sdkType: 'appkit',
   sdkVersion: 'html-wagmi-undefined',
   defaultAccountTypes: ConstantsUtil.DEFAULT_ACCOUNT_TYPES,
+  enableCoinbase: true,
+  enableBaseAccount: true,
   enableNetworkSwitch: true,
   experimental_preferUniversalLinks: false,
   remoteFeatures: {},

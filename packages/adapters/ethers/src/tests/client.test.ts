@@ -1384,7 +1384,11 @@ describe('EthersAdapter', () => {
     })
 
     beforeEach(() => {
-      vi.clearAllMocks()
+      vi.restoreAllMocks()
+      vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
+        ...OptionsController.state,
+        metadata: mockEthersConfig.metadata
+      })
     })
 
     it('should create Ethers config with base account provider if enableBaseAccount is not disabled', async () => {

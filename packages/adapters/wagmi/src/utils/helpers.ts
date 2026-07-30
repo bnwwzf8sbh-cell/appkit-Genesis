@@ -102,3 +102,10 @@ export async function getCoinbaseConnector(
 
   return null
 }
+
+export async function getCoinbaseWalletConnector(
+  connectors: readonly Connector[],
+  preference?: 'all' | 'smartWalletOnly' | 'eoaOnly'
+): Promise<CreateConnectorFn | null> {
+  return getCoinbaseConnector(connectors, preference)
+}
