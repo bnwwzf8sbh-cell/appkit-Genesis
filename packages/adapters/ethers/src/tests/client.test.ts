@@ -1394,6 +1394,7 @@ describe('EthersAdapter', () => {
       expect(providers?.baseAccount).toBeDefined()
     })
 
+<<<<<<< HEAD
     it('should create Ethers config without base account provider if enableBaseAccount is disabled', async () => {
       vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
         ...OptionsController.state,
@@ -1416,9 +1417,12 @@ describe('EthersAdapter', () => {
     })
 
     it('should create Ethers config without coinbase wallet provider if enableCoinbase is disabled', async () => {
+=======
+    it('should create Ethers config without base account provider if disabled', async () => {
+>>>>>>> origin/REOWN-4409
       vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
         ...OptionsController.state,
-        enableCoinbase: false
+        enableBaseAccount: false
       })
       const providers = await adapter['createEthersConfig']()
 

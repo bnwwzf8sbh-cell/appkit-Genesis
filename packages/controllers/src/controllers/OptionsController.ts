@@ -102,12 +102,16 @@ export interface OptionsControllerStatePublic {
    */
   enableEIP6963?: boolean
   /**
-   * Enable or disable the Coinbase wallet.
+   * Enable or disable the Coinbase Wallet SDK connector (@coinbase/wallet-sdk).
    * @default true
    */
   enableCoinbase?: boolean
   /**
+<<<<<<< HEAD
    * Enable or disable the Base Account connector (for gasless transactions via CDP Paymaster).
+=======
+   * Enable or disable the Base Account SDK connector (@base-org/account).
+>>>>>>> origin/REOWN-4409
    * @default true
    */
   enableBaseAccount?: boolean

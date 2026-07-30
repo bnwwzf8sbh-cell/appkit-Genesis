@@ -3,7 +3,11 @@ import type UniversalProvider from '@walletconnect/universal-provider'
 import type { W3mFrameProvider } from '@reown/appkit-wallet'
 
 import type { BaseProvider } from './BaseProvider.js'
+<<<<<<< HEAD
 import type { CoinbaseWalletProvider } from './CoinbaseProvider.js'
+=======
+import type { CoinbaseWalletProvider } from './CoinbaseWalletProvider.js'
+>>>>>>> origin/REOWN-4409
 import type { InjectedProvider } from './InjectedProvider.js'
 import type { SafeProvider } from './SafeProvider.js'
 
