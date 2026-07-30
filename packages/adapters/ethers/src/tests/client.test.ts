@@ -394,99 +394,6 @@ describe('EthersAdapter', () => {
         preferredAccountType: 'smartAccount'
       })
     })
-
-    it('should resolve provider from ethersProviders when connector has no provider in early-return path', async () => {
-      const resolvedProvider = {
-        request: vi.fn(),
-        on: vi.fn(),
-        removeListener: vi.fn()
-      } as unknown as Provider
-
-      const mockEthersProvider = {
-        initialize: vi.fn().mockResolvedValue(undefined),
-        getProvider: vi.fn().mockResolvedValue(resolvedProvider)
-      }
-
-      const connector = { id: 'injected', provider: undefined, type: 'EXTERNAL', chain: 'eip155' }
-
-      Object.defineProperty(adapter, 'connectors', {
-        value: [connector],
-        configurable: true,
-        writable: true
-      })
-
-      adapter['ethersProviders'] = { injected: mockEthersProvider as any }
-
-      vi.spyOn(adapter as any, 'getConnection').mockReturnValue({
-        connectorId: 'injected',
-        caipNetwork: mainnet,
-        account: { address: '0x1234567890123456789012345678901234567890' },
-        accounts: [{ address: '0x1234567890123456789012345678901234567890' }]
-      })
-
-      const accountChangedSpy = vi.fn()
-      adapter.on('accountChanged', accountChangedSpy)
-
-      const result = await adapter.connect({ id: 'injected', type: 'EXTERNAL', chainId: 1 })
-
-      expect(mockEthersProvider.initialize).toHaveBeenCalled()
-      expect(mockEthersProvider.getProvider).toHaveBeenCalled()
-      expect(accountChangedSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          connector: expect.objectContaining({ provider: resolvedProvider })
-        })
-      )
-      expect(result.provider).toBe(resolvedProvider)
-    })
-
-    it('should not re-initialize provider when connector already has one in early-return path', async () => {
-      const existingProvider = {
-        request: vi.fn(),
-        on: vi.fn(),
-        removeListener: vi.fn()
-      } as unknown as Provider
-
-      const mockEthersProvider = {
-        initialize: vi.fn().mockResolvedValue(undefined),
-        getProvider: vi.fn()
-      }
-
-      const connector = {
-        id: 'injected',
-        provider: existingProvider,
-        type: 'EXTERNAL',
-        chain: 'eip155'
-      }
-
-      Object.defineProperty(adapter, 'connectors', {
-        value: [connector],
-        configurable: true,
-        writable: true
-      })
-
-      adapter['ethersProviders'] = { injected: mockEthersProvider as any }
-
-      vi.spyOn(adapter as any, 'getConnection').mockReturnValue({
-        connectorId: 'injected',
-        caipNetwork: mainnet,
-        account: { address: '0x1234567890123456789012345678901234567890' },
-        accounts: [{ address: '0x1234567890123456789012345678901234567890' }]
-      })
-
-      const accountChangedSpy = vi.fn()
-      adapter.on('accountChanged', accountChangedSpy)
-
-      const result = await adapter.connect({ id: 'injected', type: 'EXTERNAL', chainId: 1 })
-
-      expect(mockEthersProvider.initialize).not.toHaveBeenCalled()
-      expect(mockEthersProvider.getProvider).not.toHaveBeenCalled()
-      expect(accountChangedSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          connector: expect.objectContaining({ provider: existingProvider })
-        })
-      )
-      expect(result.provider).toBe(existingProvider)
-    })
   })
 
   describe('EthersAdapter -reconnect', () => {
@@ -1373,9 +1280,6 @@ describe('EthersAdapter', () => {
           BaseProvider: vi.fn(() => ({
             initialize: vi.fn()
           })),
-          CoinbaseWalletProvider: vi.fn(() => ({
-            initialize: vi.fn()
-          })),
           InjectedProvider: vi.fn(() => ({
             initialize: vi.fn()
           }))
@@ -1387,15 +1291,14 @@ describe('EthersAdapter', () => {
       vi.clearAllMocks()
     })
 
-    it('should create Ethers config with base account provider if enableBaseAccount is not disabled', async () => {
+    it('should create Ethers config with coinbase provider if not disabled', async () => {
       const ethersAdapter = new EthersAdapter()
       const providers = await ethersAdapter['createEthersConfig']()
 
       expect(providers?.baseAccount).toBeDefined()
     })
 
-<<<<<<< HEAD
-    it('should create Ethers config without base account provider if enableBaseAccount is disabled', async () => {
+    it('should create Ethers config without base account provider if disabled', async () => {
       vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
         ...OptionsController.state,
         enableBaseAccount: false
@@ -1403,30 +1306,6 @@ describe('EthersAdapter', () => {
       const providers = await adapter['createEthersConfig']()
 
       expect(providers?.baseAccount).toBeUndefined()
-    })
-
-    it('should create Ethers config with coinbase wallet provider if enableCoinbase is not disabled', async () => {
-      vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
-        ...OptionsController.state,
-        metadata: mockEthersConfig.metadata
-      })
-      const ethersAdapter = new EthersAdapter()
-      const providers = await ethersAdapter['createEthersConfig']()
-
-      expect(providers?.coinbaseWallet).toBeDefined()
-    })
-
-    it('should create Ethers config without coinbase wallet provider if enableCoinbase is disabled', async () => {
-=======
-    it('should create Ethers config without base account provider if disabled', async () => {
->>>>>>> origin/REOWN-4409
-      vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
-        ...OptionsController.state,
-        enableBaseAccount: false
-      })
-      const providers = await adapter['createEthersConfig']()
-
-      expect(providers?.coinbaseWallet).toBeUndefined()
     })
 
     it('should create Ethers config with safe provider if in iframe and ancestor is app.safe.global', async () => {

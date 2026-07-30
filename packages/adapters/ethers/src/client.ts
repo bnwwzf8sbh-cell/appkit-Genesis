@@ -3,7 +3,6 @@ import { JsonRpcProvider, formatEther, getAddress } from 'ethers'
 
 import { WcConstantsUtil } from '@reown/appkit'
 import {
-  type CaipAddress,
   type ChainNamespace,
   ConstantsUtil as CommonConstantsUtil,
   ErrorUtil,
@@ -64,11 +63,7 @@ export class EthersAdapter extends AdapterBlueprint {
   }
 
   private async createEthersConfig() {
-<<<<<<< HEAD
-    const { metadata, enableCoinbase, enableBaseAccount, enableInjected, enableEIP6963 } =
-=======
     const { metadata, enableBaseAccount, enableCoinbase, enableInjected, enableEIP6963 } =
->>>>>>> origin/REOWN-4409
       OptionsController.state
 
     if (!metadata) {
@@ -82,20 +77,12 @@ export class EthersAdapter extends AdapterBlueprint {
     }
 
     if (enableBaseAccount !== false) {
-<<<<<<< HEAD
-      // Do not initialize provider to prevent unnecessary api calls - lazy load
-=======
       // Do not initialize provider to prevent unnecessary api calls- lazy load
->>>>>>> origin/REOWN-4409
       this.ethersProviders.baseAccount = new BaseProvider()
     }
 
     if (enableCoinbase !== false) {
-<<<<<<< HEAD
-      // Do not initialize provider to prevent unnecessary api calls - lazy load
-=======
       // Do not initialize provider to prevent unnecessary api calls- lazy load
->>>>>>> origin/REOWN-4409
       this.ethersProviders.coinbaseWallet = new CoinbaseWalletProvider()
     }
 
@@ -471,18 +458,6 @@ export class EthersAdapter extends AdapterBlueprint {
         }
 
         if (connection.account) {
-          /*
-           * Resolve the provider before emitting so the base-client's accountChanged
-           * handler can call syncProvider() — keeping useAppKitProvider reactive
-           * when the user switches accounts inside the modal.
-           */
-          const ethersProvider =
-            this.ethersProviders[connector.id as keyof Omit<ProviderType, 'metadata' | 'EIP6963'>]
-          if (!connector.provider && ethersProvider) {
-            await ethersProvider.initialize()
-            connector.provider = (await ethersProvider.getProvider()) as Provider | undefined
-          }
-
           this.emit('accountChanged', {
             address: this.toChecksummedAddress(connection.account.address),
             chainId: caipNetwork.id,
@@ -642,13 +617,10 @@ export class EthersAdapter extends AdapterBlueprint {
       connectors: this.connectors
     })
 
-    if (connection && connection.caipNetwork) {
+    if (connection) {
       return {
         accounts: connection.accounts.map(({ address }) =>
-          CoreHelperUtil.createAccount({
-            caipAddress: `${connection?.caipNetwork?.caipNetworkId}:${address}` as CaipAddress,
-            type: 'eoa'
-          })
+          CoreHelperUtil.createAccount(CommonConstantsUtil.CHAIN.EVM, address, 'eoa')
         )
       }
     }
@@ -658,14 +630,11 @@ export class EthersAdapter extends AdapterBlueprint {
       if (!provider.user) {
         return { accounts: [] }
       }
-      const { accounts, address, chainId } = provider.user
+      const { accounts, address } = provider.user
 
       return Promise.resolve({
         accounts: (accounts || [{ address, type: 'eoa' }]).map(account =>
-          CoreHelperUtil.createAccount({
-            caipAddress: `eip155:${chainId}:${account.address}` as CaipAddress,
-            type: account.type
-          })
+          CoreHelperUtil.createAccount(CommonConstantsUtil.CHAIN.EVM, account.address, account.type)
         )
       })
     }
@@ -674,17 +643,10 @@ export class EthersAdapter extends AdapterBlueprint {
       method: 'eth_requestAccounts'
     })
 
-    const caipNetwork = ChainController.getActiveCaipNetwork(this.namespace as ChainNamespace)
-
     return {
-      accounts: caipNetwork
-        ? accounts.map(account =>
-            CoreHelperUtil.createAccount({
-              caipAddress: `${caipNetwork?.caipNetworkId}:${account}`,
-              type: 'eoa'
-            })
-          )
-        : []
+      accounts: accounts.map(account =>
+        CoreHelperUtil.createAccount(CommonConstantsUtil.CHAIN.EVM, account, 'eoa')
+      )
     }
   }
 
