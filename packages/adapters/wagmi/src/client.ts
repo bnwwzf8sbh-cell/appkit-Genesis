@@ -62,15 +62,7 @@ import type { W3mFrameProvider } from '@reown/appkit-wallet'
 import { authConnector } from './connectors/AuthConnector.js'
 import { walletConnect } from './connectors/WalletConnectConnector.js'
 import { LimitterUtil } from './utils/LimitterUtil.js'
-<<<<<<< HEAD
 import { getBaseAccountConnector, getCoinbaseConnector, getSafeConnector } from './utils/helpers.js'
-=======
-import {
-  getBaseAccountConnector,
-  getCoinbaseWalletConnector,
-  getSafeConnector
-} from './utils/helpers.js'
->>>>>>> origin/REOWN-4409
 
 interface PendingTransactionsFilter {
   enable: boolean
@@ -306,7 +298,6 @@ export class WagmiAdapter extends AdapterBlueprint {
 
   private async addThirdPartyConnectors() {
     const thirdPartyConnectors: CreateConnectorFn[] = []
-<<<<<<< HEAD
     const {
       enableCoinbase: isCoinbaseEnabled,
       enableBaseAccount: isBaseAccountEnabled,
@@ -314,18 +305,12 @@ export class WagmiAdapter extends AdapterBlueprint {
     } = OptionsController.state || {}
 
     if (isBaseAccountEnabled !== false) {
-=======
-    const { enableCoinbase, enableBaseAccount } = OptionsController.state || {}
-
-    if (enableBaseAccount !== false) {
->>>>>>> origin/REOWN-4409
       const baseAccountConnector = await getBaseAccountConnector(this.wagmiConfig.connectors)
       if (baseAccountConnector) {
         thirdPartyConnectors.push(baseAccountConnector)
       }
     }
 
-<<<<<<< HEAD
     if (isCoinbaseEnabled !== false) {
       const coinbaseConnector = await getCoinbaseConnector(
         this.wagmiConfig.connectors,
@@ -333,12 +318,6 @@ export class WagmiAdapter extends AdapterBlueprint {
       )
       if (coinbaseConnector) {
         thirdPartyConnectors.push(coinbaseConnector)
-=======
-    if (enableCoinbase !== false) {
-      const coinbaseWalletConnector = await getCoinbaseWalletConnector(this.wagmiConfig.connectors)
-      if (coinbaseWalletConnector) {
-        thirdPartyConnectors.push(coinbaseWalletConnector)
->>>>>>> origin/REOWN-4409
       }
     }
 

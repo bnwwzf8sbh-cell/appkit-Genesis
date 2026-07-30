@@ -107,11 +107,7 @@ export interface OptionsControllerStatePublic {
    */
   enableCoinbase?: boolean
   /**
-<<<<<<< HEAD
    * Enable or disable the Base Account connector (for gasless transactions via CDP Paymaster).
-=======
-   * Enable or disable the Base Account SDK connector (@base-org/account).
->>>>>>> origin/REOWN-4409
    * @default true
    */
   enableBaseAccount?: boolean

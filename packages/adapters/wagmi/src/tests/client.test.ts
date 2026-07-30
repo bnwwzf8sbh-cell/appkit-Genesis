@@ -1635,12 +1635,7 @@ describe('WagmiAdapter - addThirdPartyConnectors', () => {
     vi.restoreAllMocks()
   })
 
-<<<<<<< HEAD
   it('should add Base Account connector when enableBaseAccount is not false', async () => {
-=======
-  it('should add Base Account connector if enableBaseAccount is not false', async () => {
-    vi.spyOn(helpers, 'getCoinbaseWalletConnector').mockResolvedValue(null)
->>>>>>> origin/REOWN-4409
     const getBaseAccountConnectorSpy = vi
       .spyOn(helpers, 'getBaseAccountConnector')
       .mockResolvedValue(mockBaseAccountConnector() as any)

@@ -64,11 +64,7 @@ export class EthersAdapter extends AdapterBlueprint {
   }
 
   private async createEthersConfig() {
-<<<<<<< HEAD
     const { metadata, enableCoinbase, enableBaseAccount, enableInjected, enableEIP6963 } =
-=======
-    const { metadata, enableBaseAccount, enableCoinbase, enableInjected, enableEIP6963 } =
->>>>>>> origin/REOWN-4409
       OptionsController.state
 
     if (!metadata) {
@@ -82,20 +78,12 @@ export class EthersAdapter extends AdapterBlueprint {
     }
 
     if (enableBaseAccount !== false) {
-<<<<<<< HEAD
       // Do not initialize provider to prevent unnecessary api calls - lazy load
-=======
-      // Do not initialize provider to prevent unnecessary api calls- lazy load
->>>>>>> origin/REOWN-4409
       this.ethersProviders.baseAccount = new BaseProvider()
     }
 
     if (enableCoinbase !== false) {
-<<<<<<< HEAD
       // Do not initialize provider to prevent unnecessary api calls - lazy load
-=======
-      // Do not initialize provider to prevent unnecessary api calls- lazy load
->>>>>>> origin/REOWN-4409
       this.ethersProviders.coinbaseWallet = new CoinbaseWalletProvider()
     }
 
