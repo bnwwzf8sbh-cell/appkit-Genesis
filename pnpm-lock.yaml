@@ -4788,6 +4788,9 @@ packages:
   '@coinbase/wallet-sdk@4.3.0':
     resolution: {integrity: sha512-T3+SNmiCw4HzDm4we9wCHCxlP0pqCiwKe4sOwPH3YAK2KSKjxPRydKu6UQJrdONFVLG7ujXvbd/6ZqmvJb8rkw==}
 
+  '@coinbase/wallet-sdk@4.3.3':
+    resolution: {integrity: sha512-h8gMLQNvP5TIJVXFOyQZaxbi1Mg5alFR4Z2/PEIngdyXZEoQGcVhzyQGuDa3t9zpllxvqfAaKfzDhsfCo+nhSQ==}
+
   '@coinbase/wallet-sdk@4.3.6':
     resolution: {integrity: sha512-4q8BNG1ViL4mSAAvPAtpwlOs1gpC+67eQtgIwNvT3xyeyFFd+guwkc8bcX5rTmQhXpqnhzC4f0obACbP9CqMSA==}
 
@@ -21538,6 +21541,14 @@ snapshots:
       - supports-color
 
   '@coinbase/wallet-sdk@4.3.0':
+    dependencies:
+      '@noble/hashes': 1.8.0
+      clsx: 1.2.1
+      eventemitter3: 5.0.1
+      preact: 10.28.2
+    optional: true
+
+  '@coinbase/wallet-sdk@4.3.3':
     dependencies:
       '@noble/hashes': 1.8.0
       clsx: 1.2.1

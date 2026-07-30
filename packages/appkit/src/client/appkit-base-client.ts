@@ -441,6 +441,7 @@ export abstract class AppKitBaseClient {
     OptionsController.setEIP6963Enabled(options.enableEIP6963 !== false)
     OptionsController.setEnableInjected(options.enableInjected !== false)
     OptionsController.setEnableCoinbase(options.enableCoinbase !== false)
+    OptionsController.setEnableBaseAccount(options.enableBaseAccount !== false)
     OptionsController.setEnableNetworkSwitch(options.enableNetworkSwitch !== false)
     OptionsController.setEnableReconnect(options.enableReconnect !== false)
     OptionsController.setEnableMobileFullScreen(options.enableMobileFullScreen === true)

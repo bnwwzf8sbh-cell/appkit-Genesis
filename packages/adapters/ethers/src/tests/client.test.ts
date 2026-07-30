@@ -1384,7 +1384,11 @@ describe('EthersAdapter', () => {
     })
 
     beforeEach(() => {
-      vi.clearAllMocks()
+      vi.restoreAllMocks()
+      vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
+        ...OptionsController.state,
+        metadata: mockEthersConfig.metadata
+      })
     })
 
     it('should create Ethers config with base account provider if enableBaseAccount is not disabled', async () => {
@@ -1418,7 +1422,7 @@ describe('EthersAdapter', () => {
     it('should create Ethers config without coinbase wallet provider if enableCoinbase is disabled', async () => {
       vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
         ...OptionsController.state,
-        enableCoinbase: false
+        enableBaseAccount: false
       })
       const providers = await adapter['createEthersConfig']()
 

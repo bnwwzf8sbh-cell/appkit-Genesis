@@ -531,7 +531,10 @@ export class WagmiAdapter extends AdapterBlueprint {
     }
 
     let provider: Provider | undefined = undefined
-    if (connector.id !== CommonConstantsUtil.CONNECTOR_ID.BASE_ACCOUNT) {
+    if (
+      connector.id !== CommonConstantsUtil.CONNECTOR_ID.BASE_ACCOUNT &&
+      connector.id !== CommonConstantsUtil.CONNECTOR_ID.COINBASE_SDK
+    ) {
       provider = (await connector.getProvider().catch(() => undefined)) as Provider | undefined
     }
 

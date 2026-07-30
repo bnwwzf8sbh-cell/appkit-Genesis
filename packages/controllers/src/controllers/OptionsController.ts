@@ -102,7 +102,7 @@ export interface OptionsControllerStatePublic {
    */
   enableEIP6963?: boolean
   /**
-   * Enable or disable the Coinbase wallet.
+   * Enable or disable the Coinbase Wallet SDK connector (@coinbase/wallet-sdk).
    * @default true
    */
   enableCoinbase?: boolean
@@ -227,6 +227,8 @@ const state = proxy<OptionsControllerState>({
   sdkType: 'appkit',
   sdkVersion: 'html-wagmi-undefined',
   defaultAccountTypes: ConstantsUtil.DEFAULT_ACCOUNT_TYPES,
+  enableCoinbase: true,
+  enableBaseAccount: true,
   enableNetworkSwitch: true,
   experimental_preferUniversalLinks: false,
   remoteFeatures: {},

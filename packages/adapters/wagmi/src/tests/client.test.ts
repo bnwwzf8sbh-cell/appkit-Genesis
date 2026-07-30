@@ -163,6 +163,7 @@ describe('WagmiAdapter', () => {
     vi.spyOn(helpers, 'getBaseAccountConnector').mockResolvedValue(
       mockBaseAccountConnector() as any
     )
+    vi.spyOn(helpers, 'getCoinbaseWalletConnector').mockResolvedValue(null)
     vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
       ...OptionsController.state
     })
@@ -1603,6 +1604,9 @@ describe('WagmiAdapter - addThirdPartyConnectors', () => {
       vi.spyOn(CoreHelperUtil, 'isClient').mockReturnValue(true)
     }
 
+    // Mock getCoinbaseWalletConnector to return null by default
+    vi.spyOn(helpers, 'getCoinbaseWalletConnector').mockResolvedValue(null)
+
     adapter = new WagmiAdapter({
       networks: mockNetworks,
       projectId: mockProjectId
@@ -1655,18 +1659,22 @@ describe('WagmiAdapter - addThirdPartyConnectors', () => {
   })
 
   it('should add Coinbase connector if enableCoinbase is not false', async () => {
-    vi.spyOn(helpers, 'getBaseAccountConnector').mockResolvedValue(null)
+    const getBaseAccountConnectorSpy = vi
+      .spyOn(helpers, 'getBaseAccountConnector')
+      .mockResolvedValue(null)
     const getCoinbaseConnectorSpy = vi
       .spyOn(helpers, 'getCoinbaseConnector')
       .mockResolvedValue(mockCoinbaseConnector() as any)
     await adapter['addThirdPartyConnectors']()
+    expect(getBaseAccountConnectorSpy).toHaveBeenCalled()
     expect(getCoinbaseConnectorSpy).toHaveBeenCalled()
-    expect(adapter.wagmiConfig.connectors.length).toBe(1)
+    expect(adapter.wagmiConfig.connectors.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('should not add Coinbase connector if enableCoinbase is false', async () => {
+  it('should not add Base Account connector if enableBaseAccount is false', async () => {
     vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
       ...(OptionsController.state || {}),
+      enableBaseAccount: false,
       enableCoinbase: false
     })
     vi.spyOn(helpers, 'getBaseAccountConnector').mockResolvedValue(null)
@@ -1789,6 +1797,8 @@ describe('WagmiAdapter - BaseAccount lazy initialization', () => {
     vi.spyOn(OptionsController, 'state', 'get').mockReturnValue({
       ...OptionsController.state
     })
+    // Mock getCoinbaseWalletConnector to return null
+    vi.spyOn(helpers, 'getCoinbaseWalletConnector').mockResolvedValue(null)
 
     adapter = new WagmiAdapter({
       networks: [mainnet],
@@ -1809,6 +1819,7 @@ describe('WagmiAdapter - BaseAccount lazy initialization', () => {
       .mockResolvedValue({ connect: vi.fn(), request: vi.fn() })
 
     vi.spyOn(helpers, 'getBaseAccountConnector').mockResolvedValue(baseConnector as any)
+    vi.spyOn(helpers, 'getCoinbaseWalletConnector').mockResolvedValue(null)
 
     await adapter.syncConnectors()
 

@@ -12,6 +12,10 @@ describe('HelpersUtil', () => {
       expect(HelpersUtil.isValidReownName('123ValidName')).toBe(true)
     })
 
+    it('should return true for hyphenated names', () => {
+      expect(HelpersUtil.isValidReownName('Valid-Name-123')).toBe(true)
+    })
+
     it('should return false for names with special characters', () => {
       expect(HelpersUtil.isValidReownName('Invalid@Name!')).toBe(false)
     })
@@ -77,6 +81,10 @@ describe('HelpersUtil', () => {
   describe('validateReownName', () => {
     it('should remove special characters and return a valid name', () => {
       expect(HelpersUtil.validateReownName('Invalid@Name!')).toBe('invalidname')
+    })
+
+    it('should preserve hyphens while removing other invalid characters', () => {
+      expect(HelpersUtil.validateReownName('Invalid-Name!')).toBe('invalid-name')
     })
 
     it('should remove spaces and return a valid name', () => {
