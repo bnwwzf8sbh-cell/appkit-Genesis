@@ -4,6 +4,7 @@ import { formatEther } from 'ethers/lib/utils.js'
 
 import { WcConstantsUtil } from '@reown/appkit'
 import {
+  type CaipAddress,
   type ChainNamespace,
   ConstantsUtil as CommonConstantsUtil,
   ErrorUtil,
@@ -62,7 +63,11 @@ export class Ethers5Adapter extends AdapterBlueprint {
   }
 
   private async createEthersConfig() {
+<<<<<<< HEAD
+    const { metadata, enableCoinbase, enableBaseAccount, enableInjected, enableEIP6963 } =
+=======
     const { metadata, enableBaseAccount, enableCoinbase, enableInjected, enableEIP6963 } =
+>>>>>>> origin/REOWN-4409
       OptionsController.state
     if (!metadata) {
       return undefined
@@ -75,12 +80,20 @@ export class Ethers5Adapter extends AdapterBlueprint {
     }
 
     if (enableBaseAccount !== false) {
+<<<<<<< HEAD
+      // Do not initialize provider to prevent unnecessary api calls - lazy load
+=======
       // Do not initialize provider to prevent unnecessary api calls- lazy load
+>>>>>>> origin/REOWN-4409
       this.ethersProviders.baseAccount = new BaseProvider()
     }
 
     if (enableCoinbase !== false) {
+<<<<<<< HEAD
+      // Do not initialize provider to prevent unnecessary api calls - lazy load
+=======
       // Do not initialize provider to prevent unnecessary api calls- lazy load
+>>>>>>> origin/REOWN-4409
       this.ethersProviders.coinbaseWallet = new CoinbaseWalletProvider()
     }
 
@@ -453,6 +466,18 @@ export class Ethers5Adapter extends AdapterBlueprint {
         }
 
         if (connection.account) {
+          /*
+           * Resolve the provider before emitting so the base-client's accountChanged
+           * handler can call syncProvider() — keeping useAppKitProvider reactive
+           * when the user switches accounts inside the modal.
+           */
+          const ethersProvider =
+            this.ethersProviders[connector.id as keyof Omit<ProviderType, 'metadata' | 'EIP6963'>]
+          if (!connector.provider && ethersProvider) {
+            await ethersProvider.initialize()
+            connector.provider = (await ethersProvider.getProvider()) as Provider | undefined
+          }
+
           this.emit('accountChanged', {
             address: this.toChecksummedAddress(connection.account.address),
             chainId: caipNetwork.id,
@@ -597,10 +622,13 @@ export class Ethers5Adapter extends AdapterBlueprint {
       connectors: this.connectors
     })
 
-    if (connection) {
+    if (connection && connection.caipNetwork) {
       return {
         accounts: connection.accounts.map(({ address }) =>
-          CoreHelperUtil.createAccount(CommonConstantsUtil.CHAIN.EVM, address, 'eoa')
+          CoreHelperUtil.createAccount({
+            caipAddress: `${connection?.caipNetwork?.caipNetworkId}:${address}` as CaipAddress,
+            type: 'eoa'
+          })
         )
       }
     }
@@ -610,11 +638,14 @@ export class Ethers5Adapter extends AdapterBlueprint {
       if (!provider.user) {
         return { accounts: [] }
       }
-      const { accounts, address } = provider.user
+      const { accounts, address, chainId } = provider.user
 
       return Promise.resolve({
         accounts: (accounts || [{ address, type: 'eoa' }]).map(account =>
-          CoreHelperUtil.createAccount(CommonConstantsUtil.CHAIN.EVM, account.address, account.type)
+          CoreHelperUtil.createAccount({
+            caipAddress: `eip155:${chainId}:${account.address}` as CaipAddress,
+            type: account.type
+          })
         )
       })
     }
@@ -623,10 +654,17 @@ export class Ethers5Adapter extends AdapterBlueprint {
       method: 'eth_requestAccounts'
     })
 
+    const caipNetwork = ChainController.getActiveCaipNetwork(this.namespace as ChainNamespace)
+
     return {
-      accounts: accounts.map(account =>
-        CoreHelperUtil.createAccount(CommonConstantsUtil.CHAIN.EVM, account, 'eoa')
-      )
+      accounts: caipNetwork
+        ? accounts.map(account =>
+            CoreHelperUtil.createAccount({
+              caipAddress: `${caipNetwork?.caipNetworkId}:${account}`,
+              type: 'eoa'
+            })
+          )
+        : []
     }
   }
 

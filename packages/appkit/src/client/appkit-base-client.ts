@@ -20,6 +20,7 @@ import type {
   ChainAdapterConnector,
   ConnectExternalOptions,
   ConnectMethod,
+  ConnectOptions,
   ConnectedWalletInfo,
   ConnectionControllerClient,
   ConnectionControllerState,
@@ -27,6 +28,7 @@ import type {
   EstimateGasTransactionArgs,
   EventsControllerState,
   Features,
+  FetchWalletsOptions,
   ModalControllerState,
   NamespaceTypeMap,
   OptionsControllerState,
@@ -40,7 +42,10 @@ import type {
   UseAppKitAccountReturn,
   UseAppKitNetworkReturn,
   User,
+  WalletConnectUriSnapshot,
   WalletFeature,
+  WalletItem,
+  WalletListSnapshot,
   WriteContractArgs,
   WriteSolanaTransactionArgs
 } from '@reown/appkit-controllers'
@@ -59,6 +64,7 @@ import {
   CoreHelperUtil,
   EnsController,
   EventsController,
+  HeadlessWalletUtil,
   ModalController,
   OnRampController,
   OptionsController,
@@ -73,7 +79,8 @@ import {
   ThemeController,
   WalletUtil,
   WcHelpersUtil,
-  getPreferredAccountType
+  getPreferredAccountType,
+  maybeWrapCoinbaseProvider
 } from '@reown/appkit-controllers'
 import { setColorTheme, setThemeVariables } from '@reown/appkit-ui'
 import {
@@ -432,6 +439,7 @@ export abstract class AppKitBaseClient {
     OptionsController.setEnableWalletGuide(options.enableWalletGuide !== false)
     OptionsController.setEnableWallets(options.enableWallets !== false)
     OptionsController.setEIP6963Enabled(options.enableEIP6963 !== false)
+    OptionsController.setEnableInjected(options.enableInjected !== false)
     OptionsController.setEnableCoinbase(options.enableCoinbase !== false)
     OptionsController.setEnableBaseAccount(options.enableBaseAccount !== false)
     OptionsController.setEnableNetworkSwitch(options.enableNetworkSwitch !== false)
@@ -1277,10 +1285,10 @@ export abstract class AppKitBaseClient {
           address,
           chainId: syncAccountChainId,
           chainNamespace
-        })
+        }).catch(() => null)
       } else if (!isActiveChain && syncAccountChainId) {
         this.syncAccountInfo(address, syncAccountChainId, chainNamespace)
-        this.syncBalance({ address, chainId: syncAccountChainId, chainNamespace })
+        this.syncBalance({ address, chainId: syncAccountChainId, chainNamespace }).catch(() => null)
       } else {
         this.syncAccountInfo(address, chainId, chainNamespace)
       }
@@ -1573,7 +1581,15 @@ export abstract class AppKitBaseClient {
     chainNamespace: ChainNamespace
   }) {
     ProviderController.setProviderId(chainNamespace, type)
-    ProviderController.setProvider(chainNamespace, provider)
+    /*
+     * Coinbase eip155 providers can be restored unauthorized and throw EIP-1193
+     * 4100 on the first signing RPC — wrap so `.request()` self-heals. Keyed on
+     * the connector `id` (stable across adapters/paths), not the remapped type.
+     */
+    ProviderController.setProvider(
+      chainNamespace,
+      maybeWrapCoinbaseProvider({ connectorId: id, chainNamespace, provider })
+    )
     ConnectorController.setConnectorId(id, chainNamespace)
   }
 
@@ -1667,7 +1683,7 @@ export abstract class AppKitBaseClient {
         address,
         chainId,
         chainNamespace
-      })
+      }).catch(() => null)
     }
   }
 
@@ -1748,10 +1764,15 @@ export abstract class AppKitBaseClient {
     } else if (connectorId) {
       if (
         connectorId === ConstantsUtil.CONNECTOR_ID.COINBASE_SDK ||
-        connectorId === ConstantsUtil.CONNECTOR_ID.COINBASE
+        connectorId === ConstantsUtil.CONNECTOR_ID.COINBASE ||
+        connectorId === ConstantsUtil.CONNECTOR_ID.BASE_ACCOUNT
       ) {
         const connector = this.getConnectors().find(c => c.id === connectorId)
-        const name = connector?.name || 'Coinbase Wallet'
+        const defaultName =
+          connectorId === ConstantsUtil.CONNECTOR_ID.BASE_ACCOUNT
+            ? 'Base Account'
+            : 'Coinbase Wallet'
+        const name = connector?.name || defaultName
         const icon = connector?.imageUrl || this.getConnectorImage(connector)
         const info = connector?.info
 
@@ -2127,6 +2148,15 @@ export abstract class AppKitBaseClient {
     chain: ChainNamespace,
     shouldRefresh = false
   ) => {
+    if (caipAddress !== null) {
+      const parts = caipAddress.split(':')
+      if (parts.length !== 3 || parts.some(p => !p)) {
+        console.warn(`[AppKit] setCaipAddress: invalid CAIP-10 address rejected: "${caipAddress}"`)
+
+        return
+      }
+    }
+
     ChainController.setAccountProp('caipAddress', caipAddress, chain, shouldRefresh)
     ChainController.setAccountProp(
       'address',
@@ -2303,6 +2333,80 @@ export abstract class AppKitBaseClient {
     await ConnectionController.disconnect({ namespace: chainNamespace })
   }
 
+  /*
+   * Headless wallet list — imperative counterparts of the `useAppKitWallets` React hook,
+   * so a non-React host (e.g. `@walletconnect/pay-appkit`) can list / search / connect
+   * wallets headlessly through the AppKit instance. Both share the same code path via
+   * `HeadlessWalletUtil`.
+   */
+
+  /**
+   * Fetch / search / paginate the WalletConnect wallet list (WalletGuide explorer). Read
+   * the results with {@link getWalletList}; subscribe with {@link subscribeWalletList}.
+   */
+  public async fetchWallets(options?: FetchWalletsOptions) {
+    await HeadlessWalletUtil.fetchWallets(options)
+  }
+
+  /** The current headless wallet list (initial view + WalletConnect list + pagination). */
+  public getWalletList(): WalletListSnapshot {
+    return HeadlessWalletUtil.getWalletList()
+  }
+
+  /** Subscribe to wallet-list changes. Returns an unsubscribe. */
+  public subscribeWalletList(callback: () => void) {
+    return HeadlessWalletUtil.subscribeWalletList(callback)
+  }
+
+  /**
+   * Pre-fetch the WalletConnect URI. Read the result with {@link getWalletConnectUri}; subscribe
+   * with {@link subscribeWalletConnectUri}. Call when a wallet is selected so a later connect can
+   * deeplink synchronously (iOS) or render a QR.
+   */
+  public async prefetchWalletConnectUri(options?: ConnectOptions) {
+    await HeadlessWalletUtil.prefetchWalletConnectUri(options)
+  }
+
+  /**
+   * The current WalletConnect URI state (QR / deeplink URI + fetch/error signals) — the
+   * symmetric read for {@link prefetchWalletConnectUri}. Reads the connection layer directly, so
+   * a headless host gets it ungated through the AppKit instance.
+   */
+  public getWalletConnectUri(): WalletConnectUriSnapshot {
+    return HeadlessWalletUtil.getWalletConnectUri()
+  }
+
+  /** Subscribe to WalletConnect URI state changes. Returns an unsubscribe. */
+  public subscribeWalletConnectUri(callback: () => void) {
+    return HeadlessWalletUtil.subscribeWalletConnectUri(callback)
+  }
+
+  /**
+   * Clear the WalletConnect URI + linking state (e.g. when a headless host dismisses or
+   * cancels the QR). Resets the connection layer directly, so a host can clear the URI it
+   * read via {@link getWalletConnectUri} without touching controllers.
+   */
+  public resetWalletConnectUri() {
+    HeadlessWalletUtil.resetWcUri()
+  }
+
+  /** Clear the `connectingWallet` state (e.g. when a headless host cancels a connection). */
+  public resetConnectingWallet() {
+    HeadlessWalletUtil.resetConnectingWallet()
+  }
+
+  /**
+   * Connect a chosen wallet programmatically (headless — no modal). Handles injected,
+   * API ("all wallets"), and mobile-deeplink wallets.
+   */
+  public async connectWallet(
+    wallet: WalletItem,
+    namespace?: ChainNamespace,
+    options?: ConnectOptions
+  ) {
+    await HeadlessWalletUtil.connect(wallet, namespace, options)
+  }
+
   public getSIWX<SIWXConfigInterface = SIWXConfig>() {
     return OptionsController.state.siwx as SIWXConfigInterface | undefined
   }
@@ -2407,16 +2511,23 @@ export abstract class AppKitBaseClient {
       throw new Error('AppKit:getAccount - namespace is required')
     }
 
-    const allAccounts = connections.flatMap(connection =>
-      connection.accounts.map(({ address, type, publicKey }) =>
-        CoreHelperUtil.createAccount(
-          namespace,
-          address,
-          (type || 'eoa') as NamespaceTypeMap[ChainNamespace],
+    const fallbackCaipNetwork = ChainController.getActiveCaipNetwork(namespace)
+
+    const allAccounts = connections.flatMap(connection => {
+      const caipNetwork = connection.caipNetwork ?? fallbackCaipNetwork
+
+      if (!caipNetwork) {
+        return []
+      }
+
+      return connection.accounts.map(({ address, type, publicKey }) =>
+        CoreHelperUtil.createAccount({
+          caipAddress: `${caipNetwork.caipNetworkId}:${address}`,
+          type: type || 'eoa',
           publicKey
-        )
+        })
       )
-    )
+    })
 
     if (!accountState) {
       return undefined
@@ -2486,11 +2597,14 @@ export abstract class AppKitBaseClient {
   public subscribeNetwork(
     callback: (newState: Omit<UseAppKitNetworkReturn, 'switchNetwork'>) => void
   ) {
-    return ChainController.subscribe(({ activeCaipNetwork }) => {
+    return ChainController.subscribe(({ activeCaipNetwork, activeChain, chains }) => {
+      const networkState = activeChain ? chains.get(activeChain)?.networkState : undefined
       callback({
         caipNetwork: activeCaipNetwork,
         chainId: activeCaipNetwork?.id,
-        caipNetworkId: activeCaipNetwork?.caipNetworkId
+        caipNetworkId: activeCaipNetwork?.caipNetworkId,
+        approvedCaipNetworkIds: networkState?.approvedCaipNetworkIds,
+        supportsAllNetworks: networkState?.supportsAllNetworks ?? true
       })
     })
   }

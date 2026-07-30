@@ -16,6 +16,7 @@ import type {
   ApiGetUsageResponse,
   ApiGetWalletsRequest,
   ApiGetWalletsResponse,
+  BadgeType,
   ProjectLimits,
   Tier,
   WcWallet
@@ -279,8 +280,9 @@ export const ApiController = {
         ...params,
         page: String(params.page),
         entries: String(params.entries),
-        include: params.include?.join(','),
-        exclude: exclude.join(',')
+        include: params.include?.join(',') || undefined,
+        exclude: exclude.join(',') || undefined,
+        include_pay_only: params.include_pay_only ? 'true' : undefined
       }
     })
 
@@ -385,19 +387,36 @@ export const ApiController = {
     }
   },
 
-  async fetchWalletsByPage({ page }: Pick<ApiGetWalletsRequest, 'page'>) {
+  async fetchWalletsByPage({
+    page,
+    entries: entriesOverride,
+    badge,
+    include: includeOverride,
+    exclude: excludeOverride,
+    includePayOnly,
+    sort
+  }: Pick<ApiGetWalletsRequest, 'page' | 'sort'> & {
+    entries?: number
+    badge?: BadgeType
+    include?: string[]
+    exclude?: string[]
+    includePayOnly?: boolean
+  }) {
     const { includeWalletIds, excludeWalletIds, featuredWalletIds } = OptionsController.state
     const chains = ChainController.getRequestedCaipNetworkIds().join(',')
-    const exclude = [
+    const defaultExclude = [
       ...state.recommended.map(({ id }) => id),
       ...(excludeWalletIds ?? []),
       ...(featuredWalletIds ?? [])
     ].filter(Boolean)
     const params = {
       page,
-      entries,
-      include: includeWalletIds,
-      exclude,
+      entries: entriesOverride ?? entries,
+      include: includeOverride ?? includeWalletIds,
+      exclude: excludeOverride ?? defaultExclude,
+      badge_type: badge,
+      include_pay_only: includePayOnly,
+      sort,
       chains
     }
     const { data, count, mobileFilteredOutWalletsLength } = await ApiController.fetchWallets(params)
@@ -435,18 +454,35 @@ export const ApiController = {
     }
   },
 
-  async searchWallet({ search, badge }: Pick<ApiGetWalletsRequest, 'search' | 'badge'>) {
+  async searchWallet({
+    search,
+    badge,
+    entries: entriesOverride,
+    page: pageOverride,
+    include: includeOverride,
+    exclude: excludeOverride,
+    includePayOnly,
+    sort
+  }: Pick<ApiGetWalletsRequest, 'search' | 'badge' | 'sort'> & {
+    entries?: number
+    page?: number
+    include?: string[]
+    exclude?: string[]
+    includePayOnly?: boolean
+  }) {
     const { includeWalletIds, excludeWalletIds } = OptionsController.state
     const chains = ChainController.getRequestedCaipNetworkIds().join(',')
     state.search = []
 
     const params = {
-      page: 1,
-      entries: 100,
-      search: search?.trim(),
+      page: pageOverride ?? 1,
+      entries: entriesOverride ?? 100,
+      search: search?.trim() || undefined,
       badge_type: badge,
-      include: includeWalletIds,
-      exclude: excludeWalletIds,
+      include: includeOverride ?? includeWalletIds,
+      exclude: excludeOverride ?? excludeWalletIds,
+      include_pay_only: includePayOnly,
+      sort,
       chains
     }
 

@@ -85,18 +85,33 @@ export async function getBaseAccountConnector(
   return null
 }
 
+<<<<<<< HEAD
+export async function getCoinbaseConnector(
+  connectors: readonly Connector[],
+  preference?: 'all' | 'smartWalletOnly' | 'eoaOnly'
+=======
 export async function getCoinbaseWalletConnector(
   connectors: readonly Connector[]
+>>>>>>> origin/REOWN-4409
 ): Promise<CreateConnectorFn | null> {
   try {
     const { coinbaseWallet } = await import('@wagmi/connectors')
 
+<<<<<<< HEAD
+    if (coinbaseWallet && !connectors.some(c => c.id === 'coinbaseWallet')) {
+      return coinbaseWallet({ preference })
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to import Coinbase Wallet SDK:', error)
+=======
     if (coinbaseWallet && !connectors.some(c => c.id === 'coinbaseWalletSDK')) {
       return coinbaseWallet({ version: '4', preference: 'all' })
     }
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Failed to import Coinbase Wallet connector:', error)
+>>>>>>> origin/REOWN-4409
   }
 
   return null

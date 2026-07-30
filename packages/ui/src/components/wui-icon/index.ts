@@ -1,6 +1,7 @@
 import type { TemplateResult } from 'lit'
 import { LitElement } from 'lit'
 import { property } from 'lit/decorators.js'
+import { ifDefined } from 'lit/directives/if-defined.js'
 import { html, unsafeStatic } from 'lit/static-html.js'
 
 import { appStoreSvg } from '../../assets/svg/app-store.js'
@@ -24,6 +25,7 @@ import { reownSvg } from '../../assets/svg/reown-logo.js'
 import { solanaSvg } from '../../assets/svg/solana.js'
 import { telegramSvg } from '../../assets/svg/telegram.js'
 import { tonSvg } from '../../assets/svg/ton.js'
+import { tronSvg } from '../../assets/svg/tron.js'
 import { twitchSvg } from '../../assets/svg/twitch.js'
 import { twitterIconSvg } from '../../assets/svg/twitterIcon.js'
 import {
@@ -123,6 +125,7 @@ const phosphorIconsMap: Record<string, string> = {
   reown: '',
   solana: '',
   ton: '',
+  tron: '',
   telegram: '',
   twitch: '',
   twitterIcon: '',
@@ -212,6 +215,7 @@ const svgOptions: Partial<Record<IconType, TemplateResult<2>>> = {
   reown: reownSvg,
   solana: solanaSvg,
   ton: tonSvg,
+  tron: tronSvg,
   telegram: telegramSvg,
   twitch: twitchSvg,
   twitter: xSvg,
@@ -295,7 +299,7 @@ export class WuiIcon extends LitElement {
 
       // Return the Phosphor icon with dynamic tag
       // eslint-disable-next-line lit/binding-positions, lit/no-invalid-html
-      return html`<${tag} size=${getPhosphorSize[this.size]} weight="${this.weight}"></${tag}>`
+      return html`<${tag} size=${ifDefined(getPhosphorSize[this.size])} weight="${this.weight}"></${tag}>`
     }
 
     // Fallback to regular SVG

@@ -78,9 +78,22 @@ export class TonWalletConnectConnector
       throw new Error('Chain not found')
     }
 
+    const messages = (params.messages || []).map(m => ({
+      address: m.address,
+      amount: String(m.amount),
+      ...(m.payload ? { payload: m.payload } : {}),
+      ...(m.stateInit ? { stateInit: m.stateInit } : {}),
+      ...(m.extraCurrency ? { extra_currency: m.extraCurrency } : {})
+    }))
+
     const request = {
       method: 'ton_sendMessage',
-      params: [params]
+      params: {
+        valid_until: params.validUntil ?? Math.floor(Date.now() / 1000) + 60,
+        ...(params.from ? { from: params.from } : {}),
+        ...(params.network ? { network: params.network } : {}),
+        messages
+      }
     }
     const result: { boc?: string; result?: string } | undefined = await this.provider.request(
       request,
@@ -100,7 +113,7 @@ export class TonWalletConnectConnector
   }
 
   public setDefaultChain(chainId: string) {
-    this.provider.setDefaultChain(chainId)
+    this.provider?.setDefaultChain(chainId)
   }
 
   // -- Internals ----------------------------------------------------- //

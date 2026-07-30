@@ -9,6 +9,7 @@ import type {
   CaipAddress,
   CaipNetwork,
   CaipNetworkId,
+  ChainId,
   ChainNamespace,
   Hex,
   OnRampProvider,
@@ -75,6 +76,7 @@ export interface LinkingRecord {
   redirect: string
   redirectUniversalLink?: string
   href: string
+  universalHref?: string
 }
 
 export type ProjectId = string
@@ -191,6 +193,13 @@ export interface ApiGetWalletsRequest {
   exclude?: string[]
   names?: string
   rdns?: string
+  /**
+   * Include wallets that support WalletConnect Pay but are not v2-compatible.
+   * By default the API returns only v2-compatible wallets, which filters these out.
+   */
+  include_pay_only?: boolean
+  /** Sort mode. 'wcpay' bubbles WalletConnect Pay-supporting wallets to the top. */
+  sort?: 'default' | 'wcpay'
 }
 
 export interface ApiGetWalletsResponse {
@@ -275,11 +284,13 @@ export interface BlockchainApiSwapTokensRequest {
 export interface BlockchainApiGetAddressBalanceRequest {
   caipNetworkId: string
   address: string
+  method?: string
+  params?: unknown
 }
 
-export interface BlockchainApiGetAddressBalanceResponse {
+export interface BlockchainApiGetAddressBalanceResponse<T = string> {
   ok: boolean
-  result: string
+  result: T
   jsonrpc: string
   id: string
 }
@@ -1138,12 +1149,15 @@ export type NamespaceTypeMap = {
   sui: 'eoa'
   stacks: 'eoa'
   ton: 'eoa'
+  tron: 'eoa'
 }
 
 export type AccountTypeMap = {
   [K in ChainNamespace]: {
     namespace: K
     address: string
+    chainId?: ChainId
+    caipAddress?: CaipAddress
     type: NamespaceTypeMap[K]
     publicKey?: K extends 'bip122' ? string : never
     path?: K extends 'bip122' ? string : never
@@ -1419,6 +1433,8 @@ export type UseAppKitNetworkReturn = {
   caipNetwork: CaipNetwork | undefined
   chainId: number | string | undefined
   caipNetworkId: CaipNetworkId | undefined
+  approvedCaipNetworkIds: CaipNetworkId[] | undefined
+  supportsAllNetworks: boolean
   switchNetwork: (network: AppKitNetwork) => Promise<void>
 }
 

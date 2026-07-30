@@ -65,7 +65,10 @@ export class ModalValidator {
     })
   }
 
-  async expectBalanceFetched(currency: 'SOL' | 'ETH' | 'BTC' | 'POL' | 'TON', namespace?: string) {
+  async expectBalanceFetched(
+    currency: 'SOL' | 'ETH' | 'BTC' | 'POL' | 'TON' | 'TRX',
+    namespace?: string
+  ) {
     const accountButton = namespace
       ? this.page.getByTestId(`account-button-${namespace}`)
       : this.page.locator('appkit-account-button').first()
@@ -307,11 +310,22 @@ export class ModalValidator {
 
   async expectOpenButton({ disabled }: { disabled: boolean }) {
     const secondaryButton = this.page.getByTestId('w3m-connecting-widget-secondary-button')
-    if (disabled) {
-      await expect(secondaryButton).toHaveAttribute('disabled')
-    } else {
-      await expect(secondaryButton).not.toHaveAttribute('disabled')
-    }
+
+    await expect
+      .poll(
+        () =>
+          secondaryButton.evaluate((el: Element) => {
+            const btn = el.shadowRoot?.querySelector('button') as HTMLButtonElement | null
+            if (btn) {
+              return btn.disabled
+            }
+            const attr = el.getAttribute('disabled')
+
+            return attr !== null && attr !== 'false'
+          }),
+        { timeout: 60000 }
+      )
+      .toBe(disabled)
   }
 
   async expectTryAgainButton() {
@@ -362,7 +376,7 @@ export class ModalValidator {
 
   async expectCoinbaseVisible() {
     const coinbaseConnector = this.page.getByTestId(
-      /^wallet-selector-fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa/u
+      /^wallet-selector-d0ca99ff52b99abc48743dad0f7fc891e041be73574f7fac4afe5d4bb83845c8/u
     )
     await expect(coinbaseConnector).toBeVisible({ timeout: 10_000 })
   }

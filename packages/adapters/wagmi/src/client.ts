@@ -38,6 +38,7 @@ import { ErrorUtil, UserRejectedRequestError } from '@reown/appkit-common'
 import type {
   AppKitNetwork,
   BaseNetwork,
+  CaipAddress,
   CaipNetwork,
   ChainNamespace,
   Connection,
@@ -61,11 +62,15 @@ import type { W3mFrameProvider } from '@reown/appkit-wallet'
 import { authConnector } from './connectors/AuthConnector.js'
 import { walletConnect } from './connectors/WalletConnectConnector.js'
 import { LimitterUtil } from './utils/LimitterUtil.js'
+<<<<<<< HEAD
+import { getBaseAccountConnector, getCoinbaseConnector, getSafeConnector } from './utils/helpers.js'
+=======
 import {
   getBaseAccountConnector,
   getCoinbaseWalletConnector,
   getSafeConnector
 } from './utils/helpers.js'
+>>>>>>> origin/REOWN-4409
 
 interface PendingTransactionsFilter {
   enable: boolean
@@ -134,21 +139,29 @@ export class WagmiAdapter extends AdapterBlueprint {
         return { accounts: [] }
       }
 
-      const { address, accounts } = provider.user
+      const { address, accounts, chainId } = provider.user
 
       return Promise.resolve({
         accounts: (accounts || [{ address, type: 'eoa' }]).map(account =>
-          CoreHelperUtil.createAccount('eip155', account.address, account.type)
+          CoreHelperUtil.createAccount({
+            caipAddress: `eip155:${chainId}:${account.address}` as CaipAddress,
+            type: account.type
+          })
         )
       })
     }
 
-    const { addresses, address } = getAccount(this.wagmiConfig)
+    const { addresses, address, chainId } = getAccount(this.wagmiConfig)
 
     return Promise.resolve({
-      accounts: [...new Set(addresses || [address])]?.map(val =>
-        CoreHelperUtil.createAccount('eip155', val || '', 'eoa')
-      )
+      accounts: chainId
+        ? [...new Set(addresses || [address])]?.map(val =>
+            CoreHelperUtil.createAccount({
+              caipAddress: `eip155:${chainId}:${val || ''}` as CaipAddress,
+              type: 'eoa'
+            })
+          )
+        : []
     })
   }
 
@@ -293,19 +306,39 @@ export class WagmiAdapter extends AdapterBlueprint {
 
   private async addThirdPartyConnectors() {
     const thirdPartyConnectors: CreateConnectorFn[] = []
+<<<<<<< HEAD
+    const {
+      enableCoinbase: isCoinbaseEnabled,
+      enableBaseAccount: isBaseAccountEnabled,
+      coinbasePreference
+    } = OptionsController.state || {}
+
+    if (isBaseAccountEnabled !== false) {
+=======
     const { enableCoinbase, enableBaseAccount } = OptionsController.state || {}
 
     if (enableBaseAccount !== false) {
+>>>>>>> origin/REOWN-4409
       const baseAccountConnector = await getBaseAccountConnector(this.wagmiConfig.connectors)
       if (baseAccountConnector) {
         thirdPartyConnectors.push(baseAccountConnector)
       }
     }
 
+<<<<<<< HEAD
+    if (isCoinbaseEnabled !== false) {
+      const coinbaseConnector = await getCoinbaseConnector(
+        this.wagmiConfig.connectors,
+        coinbasePreference
+      )
+      if (coinbaseConnector) {
+        thirdPartyConnectors.push(coinbaseConnector)
+=======
     if (enableCoinbase !== false) {
       const coinbaseWalletConnector = await getCoinbaseWalletConnector(this.wagmiConfig.connectors)
       if (coinbaseWalletConnector) {
         thirdPartyConnectors.push(coinbaseWalletConnector)
+>>>>>>> origin/REOWN-4409
       }
     }
 
@@ -496,11 +529,18 @@ export class WagmiAdapter extends AdapterBlueprint {
      * from wagmi since we already set it in chain adapter blueprint
      */
 
-    const { enableEIP6963: isEIP6963Enabled } = OptionsController.state || {}
-    if (
-      connector.type === CommonConstantsUtil.CONNECTOR_ID.INJECTED &&
-      isEIP6963Enabled === false
-    ) {
+    const { enableEIP6963: isEIP6963Enabled, enableInjected: isInjectedEnabled } =
+      OptionsController.state || {}
+
+    const isInjectedType = connector.type === CommonConstantsUtil.CONNECTOR_ID.INJECTED
+    const isBasicInjected = connector.id === CommonConstantsUtil.CONNECTOR_ID.INJECTED
+    const isEip6963Connector = isInjectedType && !isBasicInjected
+
+    if (isBasicInjected && isInjectedEnabled === false) {
+      return
+    }
+
+    if (isEip6963Connector && isEIP6963Enabled === false) {
       return
     }
 
@@ -1076,6 +1116,14 @@ export class WagmiAdapter extends AdapterBlueprint {
   }
 
   private toChecksummedAddress(address: string) {
-    return checksumAddress(address.toLowerCase() as `0x${string}`)
+    if (!address) {
+      return address as `0x${string}`
+    }
+
+    try {
+      return checksumAddress(address.toLowerCase() as `0x${string}`)
+    } catch {
+      return address as `0x${string}`
+    }
   }
 }
