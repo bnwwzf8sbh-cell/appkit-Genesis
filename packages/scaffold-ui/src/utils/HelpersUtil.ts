@@ -19,7 +19,7 @@ export const HelpersUtil = {
   },
 
   isValidReownName(name: string) {
-    return /^[a-zA-Z0-9]+$/gu.test(name)
+    return /^[a-zA-Z0-9-]+$/gu.test(name)
   },
 
   isValidEmail(email: string) {
@@ -29,7 +29,7 @@ export const HelpersUtil = {
   validateReownName(name: string) {
     const sanitizedName = name.replace(/\^/gu, '').toLowerCase()
 
-    return sanitizedName.replace(/[^a-zA-Z0-9]/gu, '')
+    return sanitizedName.replace(/[^a-zA-Z0-9-]/gu, '')
   },
 
   hasFooter() {
