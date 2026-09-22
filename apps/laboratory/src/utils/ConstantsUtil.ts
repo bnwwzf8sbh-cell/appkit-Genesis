@@ -4,6 +4,8 @@ import {
   abstract,
   adi,
   arbitrum,
+  arc,
+  arcTestnet,
   aurora,
   base,
   baseSepolia,
@@ -19,12 +21,16 @@ import {
   monadTestnet,
   optimism,
   polygon,
+  robinhood,
+  robinhoodTestnet,
   rootstock,
   rootstockTestnet,
   sepolia,
   solana,
   solanaDevnet,
   solanaTestnet,
+  stellar,
+  stellarTestnet,
   ton,
   tonTestnet,
   tronMainnet,
@@ -96,7 +102,11 @@ const EvmNetworks = [
   monadTestnet,
   rootstock,
   rootstockTestnet,
-  adi
+  adi,
+  arc,
+  arcTestnet,
+  robinhood,
+  robinhoodTestnet
 ] as [AppKitNetwork, ...AppKitNetwork[]]
 
 export const solanaNotExist = {
@@ -124,6 +134,8 @@ const BitcoinNetworks = [bitcoin, bitcoinTestnet, bitcoinSignet] as [
 const TonNetworks = [ton, tonTestnet] as [AppKitNetwork, ...AppKitNetwork[]]
 
 const TronNetworks = [tronMainnet, tronShastaTestnet] as [AppKitNetwork, ...AppKitNetwork[]]
+
+const StellarNetworks = [stellar, stellarTestnet] as [AppKitNetwork, ...AppKitNetwork[]]
 
 export const ConstantsUtil = {
   SigningSucceededToastTitle: 'Signing Succeeded',
@@ -182,12 +194,14 @@ export const ConstantsUtil = {
   BitcoinNetworks,
   TonNetworks,
   TronNetworks,
+  StellarNetworks,
   AllNetworks: [
     ...EvmNetworks,
     ...SolanaNetworks,
     ...BitcoinNetworks,
     ...TonNetworks,
-    ...TronNetworks
+    ...TronNetworks,
+    ...StellarNetworks
   ] as [AppKitNetwork, ...AppKitNetwork[]],
   EvmWalletButtons: [
     'walletConnect',
